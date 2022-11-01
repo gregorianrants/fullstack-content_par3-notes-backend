@@ -1,0 +1,50 @@
+###create note
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+        "content" : "this is some content",
+        "date": "2022-10-15T16:09:50.271Z",
+        "important": "true"
+}
+
+###get all notes
+GET http://localhost:3001/api/notes
+
+#may need to change id's for next 2 requests get existing and 
+#non existing ids from get all notes request
+
+### get existing note 
+GET http://localhost:3001/api/notes/634989d003cd4217df34a37c
+
+###get non existing note
+GET http://localhost:3001/api/notes/634989d003cd4217df34a374
+
+###get note with invalid id
+GET http://localhost:3001/api/notes/6
+
+###delete a note that exists
+DELETE http://localhost:3001/api/notes/634989d003cd4217df34a37c
+
+###delete a note that doesnt exist
+DELETE http://localhost:3001/api/notes/634989d003cd4217df34a37c
+
+### update a note
+PUT http://localhost:3001/api/notes/634d40e4bf1e5d514785c1b1
+Content-Type: application/json
+
+{
+        "content" : "this has changed",
+        "date": "2022-10-15T16:09:50.271Z",
+        "important": "true"
+}
+
+### update a note with an invalid id
+PUT http://localhost:3001/api/notes/6
+Content-Type: application/json
+
+{
+        "content" : "this has changed",
+        "date": "2022-10-15T16:09:50.271Z",
+        "important": "true"
+}

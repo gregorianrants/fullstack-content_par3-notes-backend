@@ -9,8 +9,6 @@ const { response } = require("express");
 const password = "letmein12";
 const Note = require("./models/note.js");
 
-
-
 const requestLogger = (request, response, next) => {
   console.log("Method:", request.method);
   console.log("Path:  ", request.path);
@@ -45,40 +43,61 @@ app.post("/api/notes", (request, response) => {
     });
   }
 
-  const note = {
+  const note = new Note({
     content: body.content,
     important: body.important || false,
     date: new Date(),
-    id: generateId(),
-  };
+  });
 
-  notes = notes.concat(note);
+  note.save().then((savedNote) => {
+    response.json(savedNote);
+  });
 
   response.json(note);
 });
 
 app.get("/api/notes", (req, res) => {
   Note.find({}).then((notes) => {
+    console.log(notes);
     res.json(notes);
   });
 });
 
-app.delete("/api/notes/:id", (request, response) => {
-  const id = Number(request.params.id);
-  notes = notes.filter((note) => note.id !== id);
-
-  response.status(204).end();
+app.get("/api/notes/:id", (request, response, next) => {
+  const id = request.params.id;
+  // const note = notes.find((note) => note.id === id);
+  Note.findById(id)
+    .then((note) => {
+      if (note) return response.json(note);
+      return response.status(404).end();
+    })
+    .catch((e) => {
+      next(e);
+    });
 });
 
-app.get("/api/notes/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const note = notes.find((note) => note.id === id);
+app.delete("/api/notes/:id", (request, response) => {
+  const id = request.params.id;
+  Note.findByIdAndRemove(id)
+    .then((res) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
+});
 
-  if (note) {
-    response.json(note);
-  } else {
-    response.status(404).end();
-  }
+app.put("/api/notes/:id", (request, response, next) => {
+  const id = request.params.id;
+  const { content, important } = request.body;
+  const note = {
+    content,
+    important,
+  };
+
+  Note.findByIdAndUpdate(id, note, { new: true })
+    .then((result) => {
+      response.status(200).json(result);
+    })
+    .catch((err) => next(err));
 });
 
 const unknownEndpoint = (request, response) => {
@@ -87,7 +106,17 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint);
 
+const errorHandler = (error, req, res, next) => {
+  if (error.name === "CastError") {
+    return res.status(400).send({ error: "malformatted id" });
+  }
+  next(error);
+};
+
+app.use(errorHandler);
+
 const PORT = process.env.PORT;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
